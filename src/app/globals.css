@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+@keyframes wheel-spin {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    /* เลื่อนลงไปในระยะที่เท่ากับความสูงของเส้น + ระยะห่าง (Gap) ของ 1 ชุด */
+    /* หรือใช้ -50% ถ้าเราเตรียม Pattern ไว้ 2 ชุดเท่ากัน */
+    transform: translateY(-50%); 
+  }
+}
+
+.animate-wheel-spin {
+  animation-name: wheel-spin;
+  animation-timing-function: linear; /* ต้องเป็น linear เท่านั้นถึงจะสมูท ไม่กระตุกตอนเริ่ม/จบ */
+  animation-iteration-count: infinite;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}

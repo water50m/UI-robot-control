@@ -1,17 +1,25 @@
 // components/RobotVisualizer/SensorNode.tsx
-export default function SensorNode({ label, status, position }: { label: string, status: boolean | null, position: string }) {
-  const getStatusColor = () => {
-    if (status === null) return 'bg-gray-700 shadow-none opacity-50'; // ไม่มีสัญญาณ
-    if (status === true) return 'bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse'; // Triggered
-    return 'bg-green-500 shadow-[0_0_5px_#22c55e]'; // Normal
+interface NodeProps {
+  label: string;
+  status: boolean | null; // null = No Signal, false = Normal, true = Triggered
+  position: string;
+}
+
+export default function SensorNode({ label, status, position }: NodeProps) {
+  const getStatusUI = () => {
+    if (status === null) return { color: 'bg-gray-700', shadow: '', text: 'NO SIGNAL' };
+    if (status === true) return { color: 'bg-red-500 animate-pulse', shadow: 'shadow-[0_0_12px_#ef4444]', text: 'TRIGGERED' };
+    return { color: 'bg-green-500', shadow: 'shadow-[0_0_8px_#22c55e]', text: 'CONNECTED' };
   };
 
+  const ui = getStatusUI();
+
   return (
-    <div className={`absolute ${position} flex flex-col items-center group`}>
-      <div className={`w-3 h-3 rounded-full border border-black/50 transition-all duration-300 ${getStatusColor()}`} />
-      <span className="text-[8px] mt-1 text-gray-500 font-mono opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-        {label}
-      </span>
+    <div className={`absolute ${position} flex flex-col items-center group z-20`}>
+      <div className={`w-3.5 h-3.5 rounded-full border border-black/50 transition-all duration-500 ${ui.color} ${ui.shadow}`} />
+      <div className="absolute top-5 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-2 py-1 rounded text-[7px] text-white whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
+        {label}: <span className={status === true ? 'text-red-400' : 'text-green-400'}>{ui.text}</span>
+      </div>
     </div>
   );
 }

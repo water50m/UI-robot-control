@@ -6,7 +6,7 @@ import ControlPad from '@/components/ControlPad';
 import Terminal from '@/components/Terminal';
 import StatusBoard from '@/components/StatusBoard';
 import Joystick from '@/components/่่joystick';
-import RobotVisualizer from '@/components/RobotVisualizer';
+import RobotVisualizer from '@/components/RobotVisualizer/index';
 
 export default function RobotCockpit() {
   const { 
@@ -46,7 +46,17 @@ export default function RobotCockpit() {
           <RobotVisualizer 
             mL={motorSpeed.L} 
             mR={motorSpeed.R} 
-            isVacuumOn={data?.fan === 1 || isConnected} 
+            isVacuumOn={data?.fan === 1 || false} // ส่งค่านี้ได้แล้ว ไม่ Error
+            sensors={{
+              // ส่งค่าเซนเซอร์จำลองไปก่อน (เดี๋ยวค่อยผูกกับ data จริง)
+              bumperL: null,  // null = สีเทา (No Signal)
+              bumperR: null,
+              cliffL: null,  // false = สีเขียว (Normal)
+              cliffR: null,
+              irL: null,  
+              irC: null,
+              irR: null,
+            }} 
           />
         </div>
 

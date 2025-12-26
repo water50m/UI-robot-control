@@ -20,20 +20,32 @@
 }
 
 @keyframes wheel-spin {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    /* เลื่อนลงไปในระยะที่เท่ากับความสูงของเส้น + ระยะห่าง (Gap) ของ 1 ชุด */
-    /* หรือใช้ -50% ถ้าเราเตรียม Pattern ไว้ 2 ชุดเท่ากัน */
-    transform: translateY(-50%); 
-  }
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-fast {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-wheel-spin {
   animation-name: wheel-spin;
-  animation-timing-function: linear; /* ต้องเป็น linear เท่านั้นถึงจะสมูท ไม่กระตุกตอนเริ่ม/จบ */
+  animation-timing-function: linear;
   animation-iteration-count: infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animate-spin-fast {
+  animation: spin-fast 0.5s linear infinite;
 }
 
 body {

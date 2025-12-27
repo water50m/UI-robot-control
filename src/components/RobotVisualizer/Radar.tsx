@@ -3,9 +3,11 @@ interface RadarProps {
   statusL1: boolean | null; // ซ้ายใน
   statusR1: boolean | null; // ขวาใน
   statusR2: boolean | null; // ขวานอก
+  statusBR: boolean | null;
+  statusBL: boolean | null;
 }
 
-export default function Radar({ statusL2, statusL1, statusR1, statusR2 }: RadarProps) {
+export default function Radar({ statusL2, statusL1, statusR1, statusR2, statusBR, statusBL }: RadarProps) {
   
   const getStrokeColor = (status: boolean | null) => {
     if (status === true) return "#ef4444";  // RED
@@ -82,6 +84,8 @@ export default function Radar({ statusL2, statusL1, statusR1, statusR2 }: RadarP
       {renderZone(statusL1, -35)} {/* ซ้ายใน */}
       {renderZone(statusR1, 6)}  {/* ขวาใน */}
       {renderZone(statusR2, 42)}  {/* ขวานอก */}
+      {renderZone(statusBR, 122)}  {/* หลังขวา */}
+      {renderZone(statusBL, -152)}  {/* หลังขวา */}
     </svg>
   );
 }

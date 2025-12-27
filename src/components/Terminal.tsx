@@ -41,7 +41,7 @@ export default function Terminal({ logs, onClear }: Props) {
   useEffect(() => {
     if (!isInitialized.current) {
       setPos({ 
-        x: window.innerWidth - 70, 
+        x: 70, 
         y: window.innerHeight - 70 
       });
       isInitialized.current = true;
@@ -151,7 +151,7 @@ export default function Terminal({ logs, onClear }: Props) {
   };
 
   if (!isInitialized.current) return null;
-
+  console.log(pos)
   return (
     <>
       {/* CASE A: ปุ่ม (Button Mode) */}

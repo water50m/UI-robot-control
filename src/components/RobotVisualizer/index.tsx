@@ -2,6 +2,7 @@ import Wheel from './Wheel';
 import SensorNode from './SensorNode';
 import Bumper from './Bumper'; 
 import Radar from './Radar';
+import { useState, useEffect } from 'react';
 
 interface VisualizerProps {
   mL: number;
@@ -18,14 +19,34 @@ interface VisualizerProps {
     irR2?: boolean | null;
 
   };
-}
+  fakeTurn?: boolean;
+}  
 
-export default function RobotVisualizer({ mL, mR, isVacuumOn, sensors }: VisualizerProps) {
-  // ไม่ต้องคำนวณ isHit ตรงนี้แล้ว ย้ายไปทำใน Bumper component เอง
+export default function RobotVisualizer({ mL, mR, isVacuumOn, sensors, fakeTurn=true }: VisualizerProps) {
+
+    // สูตร: (ผลต่างความเร็ว / ความเร็วสูงสุด) * องศาที่ต้องการเอียงสูงสุด
+    const maxTiltAngle = 15; // เอียงสูงสุด 15 องศา (ปรับได้)
+    const maxSpeed = 255;    // PWM สูงสุดที่คาดหวัง
+    
+    // คำนวณผลต่าง (ซ้าย - ขวา)
+    // ถ้าซ้ายเร็วกว่า -> ค่าเป็นบวก -> รถเอียงขวา (ตามเข็ม)
+    // ถ้าขวาเร็วกว่า -> ค่าเป็นลบ -> รถเอียงซ้าย (ทวนเข็ม)
+    const speedDiff = mL - mR;
+
+  let targetRotation = 0;
+  // แปลงเป็นองศา
+  if(fakeTurn){targetRotation = (speedDiff / maxSpeed) * maxTiltAngle;}
+
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-gray-950/40 rounded-3xl border border-white/5 backdrop-blur-md w-full h-full min-h-[300px]">
-      <div className="relative w-56 h-56">
+    <div className="flex flex-col items-center justify-center p-6 bg-transparent   w-full h-full min-h-[300px]">
+      <div 
+        className="relative w-56 h-56 transition-transform duration-500 ease-out will-change-transform"
+        style={{ 
+          // ใช้ Inline Style เพื่อกำหนดองศาละเอียดทศนิยมได้เลย
+          transform: `rotate(${targetRotation}deg)` 
+        }}
+      >
         
         {/* Wheels */}
         <Wheel side="left" speed={mL} />
@@ -39,6 +60,8 @@ export default function RobotVisualizer({ mL, mR, isVacuumOn, sensors }: Visuali
              statusL2={sensors.irL2 ?? null} 
              statusR1={sensors.irR1 ?? null}
              statusR2={sensors.irR2 ?? null}
+             statusBR={sensors.irR2 ?? null}
+             statusBL={sensors.irR2 ?? null}
            />
         </div>
 

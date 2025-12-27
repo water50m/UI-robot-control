@@ -2,13 +2,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SensorData, Direction } from '../types/robot';
 
-const WS_URL = 'ws://10.128.101.154:81'; // <-- แก้ IP ตรงนี้ที่เดียวจบ
-
+const WS_URL = 'ws://10.128.101.59:8000/ws/client'; // 
 export function useRobot() {
-  const [data, setData] = useState<SensorData>({});
   const [isConnected, setIsConnected] = useState(false);
   const [activeBtn, setActiveBtn] = useState<Direction>('');
   const [logs, setLogs] = useState<string[]>([]);
+
+  const [serverUrl, setServerUrl] = useState<string>(WS_URL);
+  const [isServerConnected, setIsServerConnected] = useState(false);
+  const [isRobotConnected, setIsRobotConnected] = useState(false);
+  const [robotData, setRobotData] = useState<SensorData>({ bat: 0, mode: '-', type: '' });
   
   const ws = useRef<WebSocket | null>(null);
   const watchdog = useRef<NodeJS.Timeout | null>(null);
@@ -16,6 +19,14 @@ export function useRobot() {
   const [controlMode, setControlMode] = useState<'pad' | 'joy'>('pad');
 
   const [motorSpeed, setMotorSpeed] = useState({ L: 0, R: 0 });// เอาไว้ทำ animetion
+
+  const handleConnectRequest = (ip: string) => {
+    // เติม ws:// ถ้า user ลืมใส่
+    const url = ip.startsWith('ws://') ? ip : `ws://${ip}`;
+    // เพิ่ม path
+    const fullUrl = `${url}/ws/client`; 
+    setServerUrl(fullUrl);
+  };
 
   // ฟังก์ชันส่งข้อมูล (ใช้ร่วมกันทั้ง Pad และ Joystick)
   const send = useCallback((cmd: string) => {
@@ -33,10 +44,10 @@ export function useRobot() {
   useEffect(() => {
     // 1. WebSocket Setup
     const connect = () => {
-      ws.current = new WebSocket(WS_URL);
+      ws.current = new WebSocket(serverUrl);
       
       ws.current.onopen = () => {
-        console.log("Connected");
+        setIsServerConnected(true);
       };
 
       ws.current.onmessage = (e) => {
@@ -52,7 +63,19 @@ export function useRobot() {
         try {
          const parsed = JSON.parse(e.data);
           // ➕ 2. ดักจับคำสั่งเปลี่ยนโหมดจากบอร์ด
+          
           // ตัวอย่าง JSON จากบอร์ด: { "sys": "config", "mode": "joy" }
+          if (parsed.type === 'status' || parsed.type === 'lidar') {
+           setIsRobotConnected(true);
+           
+          }
+
+          // 2. ถ้า Server ส่ง event พิเศษมาบอกว่า "หุ่นหลุด" (ถ้า Python ทำไว้)
+          if (parsed.type === 'robot_disconnected') {
+            console.log('ping!!!!');
+            setIsRobotConnected(false);
+          }
+
           if (parsed.mL !== undefined && parsed.mR !== undefined) {
              setMotorSpeed({ L: parsed.mL, R: parsed.mR });
              if (parsed.mL !== 0 && parsed.mR !==  0){
@@ -61,20 +84,23 @@ export function useRobot() {
 
           }
 
-          if (parsed.sys === 'config' && parsed.mode) {
+          if (parsed.type === 'config' && parsed.mode) {
+            console.log('received ',parsed);
              setControlMode(parsed.mode); 
              addLog(`System: Switched to ${parsed.mode} mode`);
              return; 
           }
 
           // ข้อมูล Sensor ปกติ
-          setData(prev => ({ ...prev, ...parsed }));
+          setRobotData(prev => ({ ...prev, ...parsed }));
           if (parsed.log) addLog(parsed.log);
 
         } catch (err) { console.error(err); }
       };
 
       ws.current.onclose = () => {
+        setIsServerConnected(false);
+        setIsRobotConnected(false);
         setIsConnected(false);
         // เคลียร์ Watchdog ตอนหลุดด้วย กันมันทำงานซ้อน
         if (watchdog.current) clearTimeout(watchdog.current);
@@ -165,7 +191,7 @@ export function useRobot() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [send, setActiveBtn]); // 👈 อย่าลืม Dependency นี้
+  }, [send, setActiveBtn, serverUrl]); // 👈 อย่าลืม Dependency นี้
 
-  return { data, isConnected, activeBtn, logs, send, setLogs, setActiveBtn, controlMode, motorSpeed };
+  return { robotData, isConnected, activeBtn, logs, send, setLogs, setActiveBtn, controlMode, motorSpeed, handleConnectRequest, isServerConnected, isRobotConnected, serverUrl };
 }

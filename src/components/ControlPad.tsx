@@ -38,23 +38,24 @@ export default function ControlPad({ send, activeBtn, isConnected, setActiveBtn 
           setPos({ x: 0, y: 0 });
           return;
         }
-        const maxDist = 40;
-        const diagDist = 28;
+        const maxDist = 100;
+        const diagDist = 60;
         let newX = 0, newY = 0;
     
         if (activeBtn) {
+          
           switch (activeBtn) {
-            case "F": newY = -maxDist; break;
-            case "B": newY = maxDist; break;
+            case "F": newY = maxDist; break;
+            case "B": newY = -maxDist; break;
             case "L": newX = -maxDist; break;
             case "R": newX = maxDist; break;
-            case "FL": newX = -diagDist; newY = -diagDist; break;
-            case "FR": newX = diagDist;  newY = -diagDist; break;
-            case "BL": newX = -diagDist; newY = diagDist;  break;
-            case "BR": newX = diagDist;  newY = diagDist;  break;
+            case "FL": newX = -diagDist; newY = diagDist; break;
+            case "FR": newX = diagDist;  newY = diagDist; break;
+            case "BL": newX = -diagDist; newY = -diagDist;  break;
+            case "BR": newX = diagDist;  newY = -diagDist;  break;
           }
         }
-    
+        console.log({ x: newX, y: newY });
         setPos({ x: newX, y: newY });
       }, [activeBtn]);
 
@@ -62,12 +63,11 @@ export default function ControlPad({ send, activeBtn, isConnected, setActiveBtn 
         if (!isConnected) return;
 
         const id = setInterval(() => {
-          send(`X${pos.x}Y${pos.y}`);
+          send(JSON.stringify({ x: pos.x, y: pos.y }));
         }, 100);
 
         return () => clearInterval(id);
       }, [pos, isConnected]);
-
     return (
       <button
         onMouseDown={handlePress}

@@ -1,14 +1,15 @@
 // types/robot.d.ts
 export interface SensorData {
-  bat?: number;
+  type: string;
+  bat: number | null;
   bump?: { l?: number; r?: number };
   cliff?: { fl?: number; fr?: number };
   fan?: number;
-  log?: string;
-  sys?: string;  // เผื่อไว้รับ config
+  log?: string; 
   mode?: string;
   mL?: number;
   mR?: number;
+  name?: string;
 }
 
 // กำหนดทิศทางที่เป็นไปได้

@@ -15,7 +15,7 @@ export default function SensorNode({ label, status, position }: NodeProps) {
   const ui = getStatusUI();
 
   return (
-    <div className={`absolute ${position} flex flex-col items-center group z-20`}>
+    <div className={`absolute ${position} flex flex-col items-center group z-20 pointer-events-auto cursor-help`}>
       <div className={`w-3.5 h-3.5 rounded-full border border-black/50 transition-all duration-500 ${ui.color} ${ui.shadow}`} />
       <div className="absolute top-5 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-2 py-1 rounded text-[7px] text-white whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
         {label}: <span className={status === true ? 'text-red-400' : 'text-green-400'}>{ui.text}</span>

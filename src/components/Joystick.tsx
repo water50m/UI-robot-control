@@ -53,7 +53,10 @@ export default function Joystick({ send, activeBtn }: Props) {
       }
 
       const { x, y } = posRef.current;
-
+      console.log({
+        x: Math.round((x / maxDist) * 100),
+        y: Math.round((y / maxDist) * -100),
+      });
       send(JSON.stringify({
         x: Math.round((x / maxDist) * 100),
         y: Math.round((y / maxDist) * -100),

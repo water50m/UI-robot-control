@@ -41,9 +41,15 @@ class ConnectionManager:
         self.robot_connection = websocket
         print("🤖 Robot Connected!")
 
-    def disconnect_robot(self):
+    async def disconnect_robot(self):
         self.robot_connection = None
-        print("🤖 Robot Disconnected!")
+        print("🤖 Robot Disconnected! (Alerting frontends...)")
+        
+        # 📢 ตะโกนบอกหน้าบ้านทุกเครื่องว่า "หุ่นไปแล้วนะ!"
+        await self.broadcast_to_frontends({
+            "type": "robot_disconnected",
+            "bat": "null"
+        })
 
     async def send_command_to_robot(self, command: dict):
         # ส่งคำสั่งเดิน/หยุด ไปหา ESP32
@@ -54,6 +60,38 @@ class ConnectionManager:
             except Exception as e:
                 print("⚠️ ส่งคำสั่งหาหุ่นยนต์ไม่สำเร็จ",e)
 
+    # -----คำนวนตำแหน่ง ของ object ---------
+    def process_lidar_data(self, data):
+        # data คือ JSON ที่รับมาจาก ESP32 ซึ่งมีทั้ง lidar และ robot_pose
+        
+        # 1. ดึงข้อมูลดิบ
+        dist = data['dist']
+        angle_rad = np.radians(data['angle'])
+        
+        # 2. ดึงตำแหน่งรถ "ที่แนบมากับข้อมูลนี้" (จะไม่ใช้ self.robot_pose แล้ว)
+        # เพราะ self.robot_pose อาจจะเปลี่ยนไปแล้วระหว่างส่งข้อมูล
+        robot_x = data['robot_x']
+        robot_y = data['robot_y']
+        robot_yaw = data['robot_yaw'] 
+
+        # 3. คำนวณ (เหมือนเดิม แต่แม่นยำขึ้น)
+        # แปลงเป็น Local
+        x_local = dist * np.cos(angle_rad)
+        y_local = dist * np.sin(angle_rad)
+
+        # แปลงเป็น Global (ใช้ yaw ที่แนบมา)
+        x_global = (x_local * np.cos(robot_yaw) - y_local * np.sin(robot_yaw)) + robot_x
+        y_global = (x_local * np.sin(robot_yaw) + y_local * np.cos(robot_yaw)) + robot_y
+
+        # 4. อัปเดต Global Pose เผื่อไว้ใช้แสดงผลตัวรถเฉยๆ
+        self.robot_pose = {"x": robot_x, "y": robot_y, "yaw": robot_yaw}
+
+        return {
+            "type": "map_update",
+            "point": {"x": round(x_global), "y": round(y_global)},
+            "robot_pose": self.robot_pose 
+        }
+    
 manager = ConnectionManager()
 
 # ==========================================
@@ -81,33 +119,42 @@ def process_lidar_data(data):
 # 3. Endpoints (ช่องทางเชื่อมต่อ)
 # ==========================================
 
-# ช่องทางสำหรับ ESP32 เข้ามาเกาะ: ws://IP_PC:8000/ws/robot
 @app.websocket("/ws/robot")
 async def websocket_endpoint_robot(websocket: WebSocket):
     await manager.connect_robot(websocket)
     try:
         while True:
-            raw_data = await websocket.receive_text()
-            data = json.loads(raw_data)
-            
-            # กรณี 1: ข้อมูล Lidar (ต้องคำนวณ) 🧮
-            if data.get("type") == "lidar":
-                processed = process_lidar_data(data) # คำนวณ XY
-                await manager.broadcast_to_frontends(processed)
-            
-            if data.get("type") == "status":
-                await manager.broadcast_to_frontends(data)
-            
-            if data.get("type") == "config":
-                await manager.broadcast_to_frontends(data)
-            # กรณี 2: ข้อมูลทั่วไป (ไม่ต้องคำนวณ) 🚀
-            # เช่น แบตเตอรี่, ข้อความ Log, สถานะการเชื่อมต่อ
-            else:
-                # ส่งต่อ (Forward) ไปให้หน้าจอเลยทันที!
-                await manager.broadcast_to_frontends(data)
+            try:
+                # ⏰ จับเวลา 2 วินาที! ถ้าเกินเวลาจะกระโดดไปที่ except asyncio.TimeoutError
+                raw_data = await asyncio.wait_for(websocket.receive_text(), timeout=2.0)
+                
+                # --- (ถ้าได้รับข้อมูลทันเวลา ก็ทำงานตามปกติ) ---
+                data = json.loads(raw_data)
+                
+                if data.get("type") == "lidar":
+                    processed = manager.process_lidar_data(data)
+                    await manager.broadcast_to_frontends(processed)
+                
+                elif data.get("type") == "status":
+                    await manager.broadcast_to_frontends(data)
+                
+                elif data.get("type") == "config":
+                    await manager.broadcast_to_frontends(data)
+                    
+                else:
+                    await manager.broadcast_to_frontends(data)
+
+            except asyncio.TimeoutError:
+                # 💥 ถ้าเงียบเกิน 2 วิ เข้าตรงนี้ทันที
+                print("⏰ Robot Silent > 2s (Timeout)")
+                await manager.disconnect_robot() # ตัดสายและแจ้งหน้าบ้าน
+                break # ออกจาก Loop รอรับข้อมูล
 
     except WebSocketDisconnect:
-        manager.disconnect_robot()
+        await manager.disconnect_robot()
+    except Exception as e:
+        print(f"Error: {e}")
+        await manager.disconnect_robot()
 
 
 # ช่องทางสำหรับ Next.js เข้ามาเกาะ: ws://IP_PC:8000/ws/client

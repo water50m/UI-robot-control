@@ -103,7 +103,7 @@ export default function StatusBoard({ data, isServerConnected, isRobotConnected,
           <button 
             onClick={handleConnect}
             disabled={loading || isServerConnected}
-            className={`px-3 py-1 rounded text-xs font-bold transition-all
+            className={`px-3 py-1 rounded text-xs font-bold transition-all cursor-hover
               ${isServerConnected 
                 ? 'bg-green-600 text-white cursor-default' 
                 : 'bg-blue-600 hover:bg-blue-500 text-white active:scale-95'

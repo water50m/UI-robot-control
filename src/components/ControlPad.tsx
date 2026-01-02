@@ -55,7 +55,6 @@ export default function ControlPad({ send, activeBtn, isConnected, setActiveBtn 
             case "BR": newX = diagDist;  newY = -diagDist;  break;
           }
         }
-        console.log({ x: newX, y: newY });
         setPos({ x: newX, y: newY });
       }, [activeBtn]);
 

@@ -8,6 +8,7 @@ import StatusBoard from '@/components/StatusBoard';
 import Joystick from '@/components/Joystick';
 import RobotVisualizer from '@/components/RobotVisualizer/index';
 import MapView from '@/components/MapDisplay/MapView';
+import Calibrating from '@/components/Calibrating';
 
 export default function RobotCockpit() {
   const { 
@@ -168,6 +169,10 @@ export default function RobotCockpit() {
              />
          </div>
       </div>
+           {/* 🛠️ ส่วนบน: Calibration & Settings Panel */}
+            <div className="fixed left-0 top-30 -translate-y-1/2 p-4 bg-black/20 border border-white/5 z-100 rounded-r-lg">
+                <Calibrating />
+            </div>
       
         <Terminal logs={logs} onClear={() => setLogs([])} />
       {/* 🚀 SLIDING CONTAINER */}
@@ -193,10 +198,20 @@ export default function RobotCockpit() {
                 <div className="lg:col-span-6 flex justify-center items-center bg-gray-800/40 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl h-full min-h-[450px]">
                     <RobotVisualizer mL={motorSpeed.L} mR={motorSpeed.R} isVacuumOn={robotData?.fan === 1 || false} sensors={{ bumperL: null, bumperR: null, cliffL: null, cliffR: null, irL1: null, irL2: null, irR1: null, irR2: null }} />
                 </div>
-                <div className="lg:col-span-6 flex flex-col justify-center items-center bg-gray-800/30 backdrop-blur-sm p-6 rounded-3xl border border-white/5 shadow-xl h-full min-h-[450px]">
-                    <div className="transition-all duration-500 transform hover:scale-105">
+                
+                <div className="lg:col-span-6 flex flex-col bg-gray-900/40 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden h-full min-h-[480px]">
+    
+                
+
+                {/* 🎮 ส่วนล่าง: Main Controller Zone */}
+                <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+                    
+                    {/* Effect: แสงฟุ้งๆ ตรงกลางเพื่อให้จอยดูเด่นขึ้น */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+
+                    {/* Controller */}
+                    <div className="relative z-10 transition-all duration-300 transform hover:scale-105">
                         {controlMode === 'pad' ? (
-                            // ถ้าเป็นโหมด Pad ให้โชว์ปุ่มลูกศร
                             <ControlPad 
                                 send={send} 
                                 activeBtn={activeBtn} 
@@ -204,7 +219,6 @@ export default function RobotCockpit() {
                                 setActiveBtn={setActiveBtn} 
                             />
                         ) : (
-                            // ถ้าไม่ใช่ (เป็นโหมด Joy) ให้โชว์จอยสติ๊ก
                             <Joystick 
                                 send={send} 
                                 activeBtn={activeBtn} 
@@ -212,6 +226,7 @@ export default function RobotCockpit() {
                         )}
                     </div>
                 </div>
+            </div>
                
             </main>
             {currentView === 'dashboard' && (

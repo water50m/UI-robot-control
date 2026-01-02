@@ -151,7 +151,7 @@ export default function Terminal({ logs, onClear }: Props) {
   };
 
   if (!isInitialized.current) return null;
-  console.log(pos)
+
   return (
     <>
       {/* CASE A: ปุ่ม (Button Mode) */}

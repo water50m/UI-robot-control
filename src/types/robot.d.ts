@@ -10,6 +10,12 @@ export interface SensorData {
   mL?: number;
   mR?: number;
   name?: string;
+  x?: number;
+  y?: number;
+  theta?: number;
+  angle?: number;
+  dist?: number;
+  val?: string;
 }
 
 // กำหนดทิศทางที่เป็นไปได้

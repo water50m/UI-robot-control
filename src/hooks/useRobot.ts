@@ -2,13 +2,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SensorData, Direction } from '../types/robot';
 
-const WS_URL = 'ws://10.128.101.59:8000/ws/client'; // 
 export function useRobot() {
   const [isConnected, setIsConnected] = useState(false);
   const [activeBtn, setActiveBtn] = useState<Direction>('');
   const [logs, setLogs] = useState<string[]>([]);
 
-  const [serverUrl, setServerUrl] = useState<string>(WS_URL);
+  const [serverUrl, setServerUrl] = useState<string>('ws://10.29.129.59:8000/ws/client');
   const [isServerConnected, setIsServerConnected] = useState(false);
   const [isRobotConnected, setIsRobotConnected] = useState(false);
   const [robotData, setRobotData] = useState<SensorData>({ bat: 0, mode: '-', type: '' });
@@ -42,6 +41,12 @@ export function useRobot() {
   };
 
   useEffect(() => {
+    fetch('/api/ipconfig')
+      .then((res) => res.json())
+      .then((cfg) => setServerUrl(cfg.ip || serverUrl));
+  }, []);
+
+  useEffect(() => {
     // 1. WebSocket Setup
     const connect = () => {
       ws.current = new WebSocket(serverUrl);
@@ -63,7 +68,6 @@ export function useRobot() {
         try {
          const parsed = JSON.parse(e.data);
           // ➕ 2. ดักจับคำสั่งเปลี่ยนโหมดจากบอร์ด
-          
           // ตัวอย่าง JSON จากบอร์ด: { "sys": "config", "mode": "joy" }
           if (parsed.type === 'status' || parsed.type === 'lidar') {
            setIsRobotConnected(true);
@@ -72,7 +76,6 @@ export function useRobot() {
 
           // 2. ถ้า Server ส่ง event พิเศษมาบอกว่า "หุ่นหลุด" (ถ้า Python ทำไว้)
           if (parsed.type === 'robot_disconnected') {
-            console.log('ping!!!!');
             setIsRobotConnected(false);
           }
 
@@ -85,9 +88,13 @@ export function useRobot() {
           }
 
           if (parsed.type === 'config' && parsed.mode) {
-            console.log('received ',parsed);
              setControlMode(parsed.mode); 
              addLog(`System: Switched to ${parsed.mode} mode`);
+             return; 
+          }
+
+          if (parsed.type === 'wb' && parsed.mode) {
+             addLog(`cal value: ${parsed.val} `);
              return; 
           }
 

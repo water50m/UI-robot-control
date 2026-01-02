@@ -16,8 +16,7 @@ interface Props {
 }
 
 export default function MapView({ 
-  mapPoints, robotPose, robotData, serverUrl, 
-  isServerConnected, isRobotConnected, onConnect, onBack 
+  mapPoints, robotPose
 }: Props) {
   
   const [windowSize, setWindowSize] = useState({ width: 800, height: 600 });
@@ -58,7 +57,6 @@ export default function MapView({
         {/* ตัวแผนที่ */}
         <MapDisplay 
             lidarPoints={mapPoints} 
-            robotPose={robotPose} 
             width={windowSize.width} 
             height={windowSize.height} 
         >

@@ -140,9 +140,19 @@ async def websocket_endpoint_robot(websocket: WebSocket):
                 
                 elif data.get("type") == "config":
                     await manager.broadcast_to_frontends(data)
-                    
-                else:
+
+                elif data.get("type") == "odom":
                     await manager.broadcast_to_frontends(data)
+                    
+                elif data.get("type") == "wb":
+                    print(data)
+                    await manager.broadcast_to_frontends(data)
+
+                elif data.get("type") == "telemetry":
+                    await manager.broadcast_to_frontends(data)
+                    
+                # else:
+                #     await manager.broadcast_to_frontends(data)
 
             except asyncio.TimeoutError:
                 # 💥 ถ้าเงียบเกิน 2 วิ เข้าตรงนี้ทันที
